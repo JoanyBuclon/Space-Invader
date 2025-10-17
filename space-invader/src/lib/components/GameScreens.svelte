@@ -105,6 +105,10 @@
 						<span class="text-2xl font-bold text-white font-mono">{gameState.stats.score}</span>
 					</div>
 					<div class="flex justify-between items-center">
+						<span class="text-slate-300">Vies restantes:</span>
+						<span class="text-xl font-bold text-yellow-400">{gameState.player.lives}</span>
+					</div>
+					<div class="flex justify-between items-center">
 						<span class="text-slate-300">Ennemis éliminés:</span>
 						<span class="text-xl font-bold text-green-400">{gameState.stats.enemiesKilled}</span>
 					</div>
