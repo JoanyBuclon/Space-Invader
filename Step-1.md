@@ -11,6 +11,7 @@
 ### Les ennemis
 
 - Ils arrivent par vague depuis le haut de l'écran
+- Chaque vague est constituée de ligne d'ennemis, chacune d'elle constituée d'un certain nombre d'ennemis
 - Ils descendent progressivement vers le Joueur
 - Quand ils atteignent la ligne de défense, le Joueur perd une vie
 

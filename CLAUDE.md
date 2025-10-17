@@ -20,8 +20,9 @@ Implement core game mechanics:
 - Player at bottom of screen shoots upward, each hit deals 1 damage
 - Player protected by a defense line
 - Enemies arrive in waves from top, descending toward player
+- Each wave is composed of multiple lines of enemies, each line containing a certain number of enemies
 - When enemies reach defense line, player loses 1 life
-- Win condition: eliminate all enemies in the wave
+- Win condition: eliminate all enemies in the wave (all enemies from all lines)
 - Lose condition: lose 3 lives
 
 ### Step 2: Multiplayer with gRPC (Etape 2)
@@ -30,7 +31,7 @@ Add multiplayer functionality with server-client architecture using gRPC.
 **Server-to-client events:**
 - `game-started(int numberOfWaves, int lifePoints)`
 - `game-ended`
-- `wave-started(int numberOfEnemies, int enemyLife)`
+- `wave-started(int numberOfEnemies, int numberOfLines, int enemyLife)`
 
 **Client-to-server events:**
 - `player-joined(string pseudo)`

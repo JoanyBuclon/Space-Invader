@@ -7,9 +7,9 @@ Ce dossier contient un exemple d'implémentation du jeu Space Invader pour l'Ét
 Cette solution implémente les fonctionnalités de base du Space Invader :
 
 - **Le joueur** : placé en bas de l'écran, tire vers le haut (1 point de dégât par tir)
-- **Les ennemis** : arrivent par vagues depuis le haut et descendent progressivement
+- **Les ennemis** : arrivent par vagues depuis le haut et descendent progressivement. Chaque vague est constituée de lignes d'ennemis, chacune d'elle constituée d'un certain nombre d'ennemis
 - **Ligne de défense** : protège le joueur, si les ennemis l'atteignent, le joueur perd une vie
-- **Conditions de victoire** : éliminer tous les ennemis de la vague
+- **Conditions de victoire** : éliminer tous les ennemis de la vague (tous les ennemis de toutes les lignes)
 - **Conditions de défaite** : perdre 3 vies
 
 ## Stack Technique

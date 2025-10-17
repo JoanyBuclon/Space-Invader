@@ -12,7 +12,7 @@ Les échanges clients / server auront lieu en gRPC.
 
 - game-started (int numberOfWaves, int lifePoints)
 - game-ended
-- wave-started (int numberOfEnemies, int enemyLife)
+- wave-started (int numberOfEnemies, int numberOfLines, int enemyLife)
 
 ### Evènements envoyés par les clients
 
@@ -27,7 +27,8 @@ Les échanges clients / server auront lieu en gRPC.
 
 - numberOfWaves: le nombre de vagues que les joueurs vont affronter
 - lifePoints: le nombre de pv que les joueurs ont en démarrant la partie
-- numberOfEnemies: le nombre d'ennemis présents dans la vague
+- numberOfEnemies: le nombre d'ennemis présents par ligne dans la vague
+- numberOfLines: le nombre de lignes d'ennemis présents dans la vague
 - enemyLife: le nombre de points de vie des ennemis (on rappelle que l'arme du joueur enlève 1 point de vie à la fois)
 - pseudo: la chaine de caractères correspondant au nom du joueur
 
@@ -39,13 +40,13 @@ Les échanges clients / server auront lieu en gRPC.
 
 - Une fois des joueurs connectés, le server va démarrer une partie pour eux en leur indiquant le nombre de vagues qu'ils vont devoir affronter et le nombre de points de vie des joueurs.
 
-- Le server lancera une première vague en indiquant le nombre d'ennemis et leurs points de vie.
+- Le server lancera une première vague en indiquant le nombre d'ennemis par lignes, le nombre de lignes d'ennemis et leurs points de vie.
 
 - A chaque fois qu'un joueur élimine un ennemi ou qu'il perd un point de vie, le client prévient le server.
 
 - Si le joueur n'a plus de points de vie, le client prévient le server.
 
-- Si le joueur a éliminé tous les ennemis, le client prévient le server.
+- Si le joueur a éliminé tous les ennemis d'une vague (tous les ennemis de toutes les lignes), le client prévient le server.
 
 - Une fois que tous les joueurs ont vaincu la vague d'ennemis ou qu'ils sont morts, le server démarre une nouvelle vague.
 

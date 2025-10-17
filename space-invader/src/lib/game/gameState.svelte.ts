@@ -8,12 +8,14 @@ import {
 	PLAYER_HEIGHT,
 	PLAYER_SPEED,
 	PLAYER_START_LIVES,
-	ENEMY_COUNT,
+	ENEMY_LINES,
+	ENEMY_PER_LINE,
 	ENEMY_WIDTH,
 	ENEMY_HEIGHT,
 	ENEMY_SPEED,
 	ENEMY_HEALTH,
 	ENEMY_SPACING,
+	ENEMY_LINE_SPACING,
 	ENEMY_START_Y,
 	BULLET_WIDTH,
 	BULLET_HEIGHT,
@@ -30,6 +32,7 @@ export function createGameState() {
 	let gameState = $state<GameState>('menu');
 
 	// Player state
+	// eslint-disable-next-line prefer-const
 	let player = $state<Player>({
 		x: CANVAS_WIDTH / 2 - PLAYER_WIDTH / 2,
 		y: CANVAS_HEIGHT - PLAYER_HEIGHT - 20,
@@ -53,6 +56,7 @@ export function createGameState() {
 	const defenseLineY = CANVAS_HEIGHT * DEFENSE_LINE_Y_RATIO;
 
 	// Input keys
+	// eslint-disable-next-line prefer-const
 	let keys = $state<Keys>({
 		left: false,
 		right: false,
@@ -60,6 +64,7 @@ export function createGameState() {
 	});
 
 	// Stats
+	// eslint-disable-next-line prefer-const
 	let stats = $state<GameStats>({
 		score: 0,
 		enemiesKilled: 0,
@@ -67,6 +72,7 @@ export function createGameState() {
 	});
 
 	// Screen shake
+	// eslint-disable-next-line prefer-const
 	let shake = $state({ x: 0, y: 0, duration: 0 });
 
 	/**
@@ -97,26 +103,34 @@ export function createGameState() {
 	}
 
 	/**
-	 * Spawn enemies in a horizontal line
+	 * Spawn enemies in a grid formation (multiple lines)
 	 */
 	function spawnEnemies() {
-		const totalWidth = (ENEMY_COUNT - 1) * ENEMY_SPACING;
+		const totalWidth = (ENEMY_PER_LINE - 1) * ENEMY_SPACING;
 		const startX = (CANVAS_WIDTH - totalWidth) / 2;
 
-		for (let i = 0; i < ENEMY_COUNT; i++) {
-			const x = startX + i * ENEMY_SPACING;
-			enemies.push({
-				id: `enemy-${Date.now()}-${i}`,
-				x,
-				y: ENEMY_START_Y,
-				width: ENEMY_WIDTH,
-				height: ENEMY_HEIGHT,
-				health: ENEMY_HEALTH,
-				maxHealth: ENEMY_HEALTH,
-				speed: ENEMY_SPEED,
-				initialX: x,
-				waveOffset: i * 0.5
-			});
+		for (let lineIndex = 0; lineIndex < ENEMY_LINES; lineIndex++) {
+			const y = ENEMY_START_Y + lineIndex * ENEMY_LINE_SPACING;
+
+			for (let i = 0; i < ENEMY_PER_LINE; i++) {
+				const x = startX + i * ENEMY_SPACING;
+
+				// Create cascading wave effect: each line and position contributes to offset
+				const waveOffset = lineIndex * 2 + i * 0.5;
+
+				enemies.push({
+					id: `enemy-${Date.now()}-${lineIndex}-${i}`,
+					x,
+					y,
+					width: ENEMY_WIDTH,
+					height: ENEMY_HEIGHT,
+					health: ENEMY_HEALTH,
+					maxHealth: ENEMY_HEALTH,
+					speed: ENEMY_SPEED,
+					initialX: x,
+					waveOffset
+				});
+			}
 		}
 	}
 
