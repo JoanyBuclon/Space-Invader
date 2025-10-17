@@ -1,38 +1,71 @@
-# sv
+# Space Invader - Solution Étape 1
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Ce dossier contient un exemple d'implémentation du jeu Space Invader pour l'Étape 1 de l'atelier Vibe Coding.
 
-## Creating a project
+## Contenu
 
-If you're seeing this, you've probably already done this step. Congrats!
+Cette solution implémente les fonctionnalités de base du Space Invader :
+- **Le joueur** : placé en bas de l'écran, tire vers le haut (1 point de dégât par tir)
+- **Les ennemis** : arrivent par vagues depuis le haut et descendent progressivement
+- **Ligne de défense** : protège le joueur, si les ennemis l'atteignent, le joueur perd une vie
+- **Conditions de victoire** : éliminer tous les ennemis de la vague
+- **Conditions de défaite** : perdre 3 vies
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Stack Technique
 
-# create a new project in my-app
-npx sv create my-app
-```
+- **Framework** : SvelteKit avec Vite
+- **Langage** : TypeScript
+- **Styling** : TailwindCSS 4.x
+- **Version Svelte** : 5.x
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
+## Installation
 
 ```sh
-npm run build
+pnpm install
+# ou npm install, yarn
 ```
 
-You can preview the production build with `npm run preview`.
+## Développement
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Démarrer le serveur de développement :
+
+```sh
+pnpm dev
+
+# ou ouvrir automatiquement dans le navigateur
+pnpm dev -- --open
+```
+
+## Build
+
+Créer une version de production :
+
+```sh
+pnpm build
+```
+
+Prévisualiser la version de production :
+
+```sh
+pnpm preview
+```
+
+## Qualité du Code
+
+Vérifier les types et le code :
+
+```sh
+pnpm check
+```
+
+Linter et vérifier le formatage :
+
+```sh
+pnpm lint
+```
+
+Formater le code :
+
+```sh
+pnpm format
+```
