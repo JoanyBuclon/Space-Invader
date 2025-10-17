@@ -56,6 +56,6 @@ Les échanges clients / server auront lieu en gRPC.
 
 Vous trouverez dans le dossier [game-master](game-master):
 
-- /server: un exemple de code server réalisé en Go.
+- /server: un exemple de code server réalisé avec Node.js.
 - /client: un exemple de Space Invader pouvant se connecter au server et réalisé avec Svelte.
 - /dashboard: Une interface graphique pour le server, réalisée en Svelte et permettant de suivre toutes les parties en cours.

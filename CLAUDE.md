@@ -9,7 +9,7 @@ This repository contains a Space Invader coding workshop (Vibe Coding Session 4 
 The repository contains:
 - **space-invader/**: Step 1 solution - basic single-player Space Invader game (Svelte + SvelteKit)
 - **game-master/**: Step 2 solution structure - multiplayer implementation with:
-  - `server/`: Go server managing synchronized multiplayer games via gRPC
+  - `server/`: Node.js server managing synchronized multiplayer games via gRPC
   - `client/`: Svelte client that connects to the multiplayer server
   - `dashboard/`: Svelte dashboard for monitoring ongoing games
 
@@ -66,7 +66,7 @@ npm run format    # Format code with Prettier
 
 ### game-master/
 The multiplayer implementation directories (server/, client/, dashboard/) are currently empty placeholders. They are intended to contain:
-- Go-based gRPC server for game state management
+- Node.js-based gRPC server for game state management
 - Svelte client with gRPC integration for multiplayer
 - Monitoring dashboard built with Svelte
 
@@ -75,7 +75,7 @@ The multiplayer implementation directories (server/, client/, dashboard/) are cu
 All development must adhere to:
 - **ESLint**: Follow all ESLint rules configured in the project
 - **Prettier**: Code must be formatted according to Prettier configuration
-- **Best Practices**: Follow established best practices for the respective technology stack (Svelte, TypeScript, Go)
+- **Best Practices**: Follow established best practices for the respective technology stack (Svelte, TypeScript, Node.js)
 
 Always run `npm run lint` and `npm run format` before committing changes in the space-invader/ directory.
 
