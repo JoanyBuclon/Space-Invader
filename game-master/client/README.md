@@ -1,16 +1,31 @@
-# Space Invader - Solution Étape 1
+# Space Invader - Client Multijoueur (Étape 2)
 
-Ce dossier contient un exemple d'implémentation du jeu Space Invader pour l'Étape 1 de l'atelier Vibe Coding.
+Ce dossier contient le client du jeu Space Invader pour l'Étape 2 de l'atelier Vibe Coding.
 
 ## Contenu
 
-Cette solution implémente les fonctionnalités de base du Space Invader :
+Ce client implémente le mode multijoueur synchronisé via gRPC :
 
-- **Le joueur** : placé en bas de l'écran, tire vers le haut (1 point de dégât par tir)
-- **Les ennemis** : arrivent par vagues depuis le haut et descendent progressivement. Chaque vague est constituée de lignes d'ennemis, chacune d'elle constituée d'un certain nombre d'ennemis
-- **Ligne de défense** : protège le joueur, si les ennemis l'atteignent, le joueur perd une vie
-- **Conditions de victoire** : éliminer tous les ennemis de la vague (tous les ennemis de toutes les lignes)
-- **Conditions de défaite** : perdre 3 vies
+- **Connexion au serveur** : le joueur entre un pseudonyme pour s'identifier
+- **Synchronisation** : le serveur gère les parties et envoie les paramètres de chaque vague
+- **Communication gRPC** : échange bidirectionnel d'événements entre client et serveur
+- **Gameplay partagé** : tous les joueurs affrontent les mêmes vagues simultanément
+- **Progression collective** : la vague suivante démarre quand tous les joueurs l'ont vaincue ou sont morts
+
+### Événements envoyés au serveur
+
+- `player-joined(string pseudo)` : connexion du joueur
+- `player-disconnected(string pseudo)` : déconnexion du joueur
+- `player-touched(string pseudo)` : le joueur perd une vie
+- `enemy-killed(string pseudo)` : le joueur élimine un ennemi
+- `wave-cleared(string pseudo)` : le joueur termine la vague
+- `player-killed(string pseudo)` : le joueur n'a plus de vies
+
+### Événements reçus du serveur
+
+- `game-started(int numberOfWaves, int lifePoints)` : début de partie
+- `wave-started(int numberOfEnemies, int numberOfLines, int enemyLife)` : nouvelle vague
+- `game-ended` : fin de partie
 
 ## Stack Technique
 
