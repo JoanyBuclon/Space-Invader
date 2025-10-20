@@ -13,6 +13,7 @@ export class GameManager {
 	private minPlayers: number;
 	private maxPlayers: number;
 	private lobbyCheckInterval: NodeJS.Timeout | null = null;
+	private cleanupInterval: NodeJS.Timeout | null = null;
 
 	constructor() {
 		this.minPlayers = getMinPlayers();
@@ -20,6 +21,9 @@ export class GameManager {
 
 		// Check lobby every 2 seconds for enough players
 		this.lobbyCheckInterval = setInterval(() => this.checkLobby(), 2000);
+
+		// Clean up old completed games every 30 seconds
+		this.cleanupInterval = setInterval(() => this.cleanupOldGames(), 30000);
 
 		logger.info(
 			`GameManager initialized (minPlayers: ${this.minPlayers}, maxPlayers: ${this.maxPlayers})`
@@ -128,22 +132,22 @@ export class GameManager {
 		const game = this.games.get(gameId);
 		if (!game) return;
 
+		// Get all player connections from the completed game
+		const players = game.getConnections();
+
+		// Filter out any disconnected players
+		const activePlayers = players.filter((p) => {
+			// Check if the connection stream is still valid
+			try {
+				// If we can't access the stream, player is disconnected
+				return p.stream && true;
+			} catch {
+				return false;
+			}
+		});
+
 		if (allPlayersDead) {
 			logger.info(`Game ${gameId}: All players died, restarting with same players`);
-
-			// Get all player connections from the completed game
-			const players = game.getConnections();
-
-			// Filter out any disconnected players
-			const activePlayers = players.filter((p) => {
-				// Check if the connection stream is still valid
-				try {
-					// If we can't access the stream, player is disconnected
-					return p.stream && true;
-				} catch {
-					return false;
-				}
-			});
 
 			if (activePlayers.length >= this.minPlayers) {
 				// Notify players that a new game is starting
@@ -171,6 +175,46 @@ export class GameManager {
 			} else {
 				logger.info(
 					`Game ${gameId}: Not enough players to restart (${activePlayers.length}/${this.minPlayers}), returning to lobby`
+				);
+
+				// Add remaining players back to lobby
+				for (const player of activePlayers) {
+					this.lobby.set(player.pseudo, player);
+				}
+
+				this.broadcastLobbyUpdate();
+			}
+		} else {
+			// Victory! Players completed all waves
+			logger.info(`Game ${gameId}: Players won! Restarting after celebration`);
+
+			if (activePlayers.length >= this.minPlayers) {
+				// Notify players that a new game is starting after victory celebration
+				const restartDelay = 10000; // 10 seconds delay for victory screen
+
+				const restartMessage = {
+					type: 'lobby-update',
+					waitingPlayers: activePlayers.map((p) => p.pseudo),
+					requiredPlayers: this.minPlayers,
+					currentPlayers: activePlayers.length
+				};
+
+				// Send restart notification after victory delay
+				setTimeout(() => {
+					for (const player of activePlayers) {
+						try {
+							player.stream.write(restartMessage);
+						} catch (error) {
+							logger.error(`Failed to notify ${player.pseudo} about restart:`, error);
+						}
+					}
+
+					// Start new game immediately after notification
+					this.startGameWithPlayers(activePlayers);
+				}, restartDelay);
+			} else {
+				logger.info(
+					`Game ${gameId}: Not enough players to restart after victory (${activePlayers.length}/${this.minPlayers}), returning to lobby`
 				);
 
 				// Add remaining players back to lobby
@@ -256,6 +300,10 @@ export class GameManager {
 			});
 		}
 
+		// Sort by startedAt descending (newest first)
+		// This ensures the dashboard always shows the most recent/current game
+		gamesInfo.sort((a, b) => b.startedAt - a.startedAt);
+
 		return gamesInfo;
 	}
 
@@ -291,14 +339,14 @@ export class GameManager {
 	 */
 	cleanupOldGames() {
 		const now = Date.now();
-		const maxAge = 1000 * 60 * 30; // 30 minutes
+		const maxAge = 1000 * 60 * 2; // 2 minutes (enough for victory screen + buffer)
 
 		for (const [gameId, game] of this.games.entries()) {
 			const state = game.getState();
 			if (state.status === 'completed' && state.completedAt) {
 				if (now - state.completedAt > maxAge) {
 					this.games.delete(gameId);
-					logger.info(`Cleaned up old game ${gameId}`);
+					logger.info(`Cleaned up old completed game ${gameId}`);
 				}
 			}
 		}
@@ -310,6 +358,9 @@ export class GameManager {
 	shutdown() {
 		if (this.lobbyCheckInterval) {
 			clearInterval(this.lobbyCheckInterval);
+		}
+		if (this.cleanupInterval) {
+			clearInterval(this.cleanupInterval);
 		}
 
 		// Send error to all lobby players

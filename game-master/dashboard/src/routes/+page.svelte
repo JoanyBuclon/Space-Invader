@@ -3,9 +3,10 @@
 	import { DashboardClient, type DashboardData, type ConnectionStatus } from '$lib/dashboardClient';
 	import GameCard from '$lib/components/GameCard.svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
+	import VictoryScreen from '$lib/components/VictoryScreen.svelte';
 
 	let dashboardData = $state<DashboardData>({
-		games: [],
+		currentGame: null,
 		stats: {
 			totalGames: 0,
 			activeGames: 0,
@@ -51,6 +52,12 @@
 		connected: 'Connecté',
 		error: 'Erreur'
 	};
+
+	// Check if game is completed with winners (victory scenario)
+	const showVictory = $derived(
+		dashboardData.currentGame?.status === 'completed' &&
+		dashboardData.currentGame.players.some((p) => p.isAlive)
+	);
 </script>
 
 <svelte:head>
@@ -85,30 +92,36 @@
 	</div>
 
 	<!-- Main Content -->
-	<div class="max-w-7xl mx-auto space-y-6">
+	<div class="max-w-7xl mx-auto space-y-8">
 		<!-- Stats Overview -->
 		<StatsCard stats={dashboardData.stats} />
 
-		<!-- Games Section -->
-		<div>
-			<h2 class="text-2xl font-bold text-white mb-4">
-				Parties en cours ({dashboardData.games.length})
-			</h2>
-
-			{#if dashboardData.games.length === 0}
-				<div
-					class="bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-lg p-12 text-center"
-				>
-					<div class="text-slate-400 text-lg">Aucune partie en cours</div>
-					<div class="text-slate-500 text-sm mt-2">
-						Les parties apparaîtront ici quand des joueurs se connecteront
-					</div>
+		<!-- Current Game Display -->
+		<div class="flex items-center justify-center min-h-[500px]">
+			{#if dashboardData.currentGame}
+				<div class="w-full max-w-4xl">
+					<h2 class="text-3xl font-bold text-white mb-6 text-center">
+						<span
+							class="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+						>
+							Partie en cours
+						</span>
+					</h2>
+					<GameCard game={dashboardData.currentGame} />
 				</div>
 			{:else}
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{#each dashboardData.games as game (game.gameId)}
-						<GameCard {game} />
-					{/each}
+				<div class="text-center space-y-6 animate-pulse-slow">
+					<div class="text-8xl">🎮</div>
+					<div>
+						<div class="text-3xl font-bold text-slate-400 mb-2">Aucune partie active</div>
+						<div class="text-slate-500">
+							En attente de joueurs pour démarrer une nouvelle partie...
+						</div>
+					</div>
+					<div class="flex items-center justify-center gap-2 text-slate-600">
+						<div class="w-2 h-2 bg-cyan-500 rounded-full animate-ping"></div>
+						<div class="text-sm">Connexions surveillées en temps réel</div>
+					</div>
 				</div>
 			{/if}
 		</div>
@@ -119,4 +132,9 @@
 		<div>Vibe Coding - Session 4</div>
 		<div>Sfeir Bordeaux</div>
 	</div>
+
+	<!-- Victory Screen Overlay -->
+	{#if showVictory && dashboardData.currentGame}
+		<VictoryScreen game={dashboardData.currentGame} />
+	{/if}
 </div>

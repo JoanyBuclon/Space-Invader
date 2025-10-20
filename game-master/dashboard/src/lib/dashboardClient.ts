@@ -25,6 +25,12 @@ export interface ServerStats {
 }
 
 export interface DashboardData {
+	currentGame: GameInfo | null;
+	stats: ServerStats;
+}
+
+// Internal interface for server response
+interface ServerDashboardData {
 	games: GameInfo[];
 	stats: ServerStats;
 }
@@ -69,8 +75,13 @@ export class DashboardClient {
 
 				this.ws.onmessage = (event) => {
 					try {
-						const data = JSON.parse(event.data) as DashboardData;
-						this.handleData(data);
+						const serverData = JSON.parse(event.data) as ServerDashboardData;
+						// Transform server data to dashboard data (extract current game)
+						const dashboardData: DashboardData = {
+							currentGame: serverData.games.length > 0 ? serverData.games[0] : null,
+							stats: serverData.stats
+						};
+						this.handleData(dashboardData);
 					} catch (error) {
 						console.error('Failed to parse dashboard data:', error);
 					}
