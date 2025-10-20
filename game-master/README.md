@@ -48,9 +48,14 @@ game-master/
 6. **Progression**: Quand tous les joueurs ont terminé la vague
    - Le serveur lance la vague suivante
    - Difficulté progressive (plus d'ennemis, plus de HP)
-7. **Fin**: Quand toutes les vagues sont terminées
-   - Le serveur envoie les statistiques finales
-   - Affichage victoire/défaite
+7. **Fin**: Deux scénarios possibles
+   - **Victoire**: Au moins un joueur survit toutes les vagues
+     - Affichage des statistiques finales
+     - Écran victoire/défaite selon le joueur
+   - **Défaite totale**: Tous les joueurs meurent
+     - Retour automatique au lobby après 5 secondes
+     - Redémarrage automatique d'une nouvelle partie avec les mêmes joueurs
+     - Continue tant qu'il y a assez de joueurs connectés
 
 ## Installation
 
@@ -224,6 +229,9 @@ cd ../dashboard && pnpm build
 - Les parties sont nettoyées automatiquement après 30 minutes
 - Le lobby expire après 5 minutes d'inactivité
 - Maximum 10 tentatives de reconnexion pour les clients
+- **Auto-restart**: Quand tous les joueurs meurent, une nouvelle partie démarre automatiquement après 5 secondes
+- Si pas assez de joueurs restent connectés, ils retournent au lobby classique
+- **Inactivity timeout**: Les joueurs inactifs (pas d'événement) pendant 40 secondes sont automatiquement marqués comme morts
 
 ## Troubleshooting
 

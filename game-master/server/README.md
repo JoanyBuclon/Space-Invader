@@ -27,7 +27,12 @@ Node.js gRPC server for the Space Invader multiplayer game (Étape 2).
 4. Server broadcasts wave configuration to all players
 5. Players send events (kills, deaths, wave completion)
 6. Server synchronizes and starts next wave when all players complete
-7. Game ends when all waves completed or all players dead
+7. Game ends in two ways:
+   - **Victory**: At least one player survives all waves
+   - **Total defeat**: All players die
+     - Server automatically restarts a new game after 5 seconds with same players
+     - Continues as long as minimum players remain connected
+     - If not enough players, they return to lobby
 
 ## Installation
 
@@ -114,8 +119,19 @@ Edit `src/config/gameConfig.ts` to modify:
 - Enemies per wave
 - Enemy health per wave
 - Lobby settings
+- **Inactivity timeout** (default: 40 seconds)
 
 Default: 5 waves with progressive difficulty (1-3 HP enemies, 2-4 lines, 5-9 enemies per line)
+
+### Inactivity Detection
+
+Players are automatically marked as dead if they don't send any events (kills, deaths, wave completion) for 40 seconds during a wave. This prevents games from being blocked by AFK or disconnected players who haven't properly sent a disconnect event.
+
+**How it works:**
+- Timer starts when wave begins
+- Timer resets on each player event (enemy-killed, player-touched)
+- Timer clears when player dies or completes wave
+- After 40s of inactivity, player is marked as dead automatically
 
 ## Project Structure
 

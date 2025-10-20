@@ -17,9 +17,10 @@ export const SERVER_CONFIG = {
 	grpcPort: 50051,
 	httpPort: 3001,
 	minPlayers: 2,
-	maxPlayers: 4,
+	maxPlayers: 10,
 	lobbyTimeout: 300000, // 5 minutes
-	gameTimeout: 600000 // 10 minutes
+	gameTimeout: 600000, // 10 minutes
+	inactivityTimeout: 40000 // 40 seconds - auto-kill inactive players
 };
 
 // Default game configuration with 5 waves of increasing difficulty
@@ -74,4 +75,11 @@ export function getMinPlayers(): number {
 
 export function getMaxPlayers(): number {
 	return parseInt(process.env.MAX_PLAYERS || String(SERVER_CONFIG.maxPlayers), 10);
+}
+
+export function getInactivityTimeout(): number {
+	return parseInt(
+		process.env.INACTIVITY_TIMEOUT || String(SERVER_CONFIG.inactivityTimeout),
+		10
+	);
 }

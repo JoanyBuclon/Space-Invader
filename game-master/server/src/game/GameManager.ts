@@ -95,6 +95,16 @@ export class GameManager {
 		}
 
 		// Create and start game
+		this.startGameWithPlayers(playerArray);
+
+		// Broadcast lobby update to remaining players
+		this.broadcastLobbyUpdate();
+	}
+
+	/**
+	 * Start a game with specific players
+	 */
+	private startGameWithPlayers(playerArray: PlayerConnection[]) {
 		const gameId = `game-${++this.gameCounter}-${Date.now()}`;
 		const game = new GameInstance(gameId, playerArray, DEFAULT_GAME_CONFIG);
 
@@ -102,11 +112,75 @@ export class GameManager {
 
 		logger.info(`Starting game ${gameId} with ${playerArray.length} players`);
 
+		// Set up callback for when game ends
+		game.setOnGameEnd((allPlayersDead: boolean) => {
+			this.handleGameEnd(gameId, allPlayersDead);
+		});
+
 		// Start the game
 		game.start();
+	}
 
-		// Broadcast lobby update to remaining players
-		this.broadcastLobbyUpdate();
+	/**
+	 * Handle game end - restart if all players died
+	 */
+	private handleGameEnd(gameId: string, allPlayersDead: boolean) {
+		const game = this.games.get(gameId);
+		if (!game) return;
+
+		if (allPlayersDead) {
+			logger.info(`Game ${gameId}: All players died, restarting with same players`);
+
+			// Get all player connections from the completed game
+			const players = game.getConnections();
+
+			// Filter out any disconnected players
+			const activePlayers = players.filter((p) => {
+				// Check if the connection stream is still valid
+				try {
+					// If we can't access the stream, player is disconnected
+					return p.stream && true;
+				} catch {
+					return false;
+				}
+			});
+
+			if (activePlayers.length >= this.minPlayers) {
+				// Notify players that a new game is starting
+				const restartDelay = 5000; // 5 seconds delay before restart
+
+				const restartMessage = {
+					type: 'lobby-update',
+					waitingPlayers: activePlayers.map((p) => p.pseudo),
+					requiredPlayers: this.minPlayers,
+					currentPlayers: activePlayers.length
+				};
+
+				for (const player of activePlayers) {
+					try {
+						player.stream.write(restartMessage);
+					} catch (error) {
+						logger.error(`Failed to notify ${player.pseudo} about restart:`, error);
+					}
+				}
+
+				// Start new game after delay
+				setTimeout(() => {
+					this.startGameWithPlayers(activePlayers);
+				}, restartDelay);
+			} else {
+				logger.info(
+					`Game ${gameId}: Not enough players to restart (${activePlayers.length}/${this.minPlayers}), returning to lobby`
+				);
+
+				// Add remaining players back to lobby
+				for (const player of activePlayers) {
+					this.lobby.set(player.pseudo, player);
+				}
+
+				this.broadcastLobbyUpdate();
+			}
+		}
 	}
 
 	/**

@@ -162,8 +162,13 @@
 				</div>
 
 				{#if gameState.lobbyPlayers.length >= gameState.requiredPlayers}
-					<div class="mt-6 text-green-400 font-semibold animate-pulse">
-						🎮 La partie va bientôt commencer!
+					<div class="mt-6 space-y-2">
+						<div class="text-green-400 font-semibold animate-pulse">
+							🎮 La partie va bientôt commencer!
+						</div>
+						<div class="text-xs text-slate-400">
+							(Redémarrage automatique après défaite)
+						</div>
 					</div>
 				{:else}
 					<div class="mt-6 text-slate-400 text-sm">

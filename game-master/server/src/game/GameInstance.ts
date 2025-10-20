@@ -1,6 +1,7 @@
 // GameInstance manages a single multiplayer game session
 
 import type { GameConfig, WaveConfig } from '../config/gameConfig.ts';
+import { getInactivityTimeout } from '../config/gameConfig.ts';
 import type { GameState, PlayerState, PlayerConnection } from './types.ts';
 import { logger } from '../utils/logger.ts';
 
@@ -10,8 +11,12 @@ export class GameInstance {
 	private state: GameState;
 	private connections: Map<string, PlayerConnection>;
 	private currentWaveConfig: WaveConfig | null = null;
+	private onGameEnd: ((allPlayersDead: boolean) => void) | null = null;
+	private playerActivityTimers: Map<string, NodeJS.Timeout> = new Map();
+	private readonly INACTIVITY_TIMEOUT: number;
 
 	constructor(gameId: string, players: PlayerConnection[], config: GameConfig) {
+		this.INACTIVITY_TIMEOUT = getInactivityTimeout();
 		this.gameId = gameId;
 		this.config = config;
 		this.connections = new Map(players.map((p) => [p.pseudo, p]));
@@ -81,6 +86,9 @@ export class GameInstance {
 			player.kills = 0;
 		}
 
+		// Start inactivity timers for all alive players
+		this.startInactivityTimers();
+
 		logger.info(`Game ${this.gameId}: Starting wave ${this.state.currentWave}`);
 
 		const waveStartedEvent = {
@@ -101,12 +109,16 @@ export class GameInstance {
 		const player = this.state.players.get(pseudo);
 		if (!player || !player.isAlive) return;
 
+		// Reset inactivity timer - player is active
+		this.resetInactivityTimer(pseudo);
+
 		player.lives--;
 		logger.info(`Game ${this.gameId}: ${pseudo} touched, ${player.lives} lives remaining`);
 
 		if (player.lives <= 0) {
 			player.isAlive = false;
 			player.hasClearedWave = true; // Mark as done (dead)
+			this.clearInactivityTimer(pseudo);
 			logger.info(`Game ${this.gameId}: ${pseudo} died`);
 		}
 
@@ -120,6 +132,9 @@ export class GameInstance {
 		const player = this.state.players.get(pseudo);
 		if (!player || !player.isAlive) return;
 
+		// Reset inactivity timer - player is active
+		this.resetInactivityTimer(pseudo);
+
 		player.kills++;
 		player.totalKills++;
 	}
@@ -130,6 +145,9 @@ export class GameInstance {
 	handleWaveCleared(pseudo: string) {
 		const player = this.state.players.get(pseudo);
 		if (!player || !player.isAlive) return;
+
+		// Clear inactivity timer - wave completed
+		this.clearInactivityTimer(pseudo);
 
 		player.hasClearedWave = true;
 		player.wavesCleared++;
@@ -145,6 +163,9 @@ export class GameInstance {
 		const player = this.state.players.get(pseudo);
 		if (!player) return;
 
+		// Clear inactivity timer - player is dead
+		this.clearInactivityTimer(pseudo);
+
 		player.isAlive = false;
 		player.hasClearedWave = true; // Mark as done (dead)
 		logger.info(`Game ${this.gameId}: ${pseudo} confirmed killed`);
@@ -158,6 +179,9 @@ export class GameInstance {
 	handlePlayerDisconnected(pseudo: string) {
 		const player = this.state.players.get(pseudo);
 		if (!player) return;
+
+		// Clear inactivity timer - player disconnected
+		this.clearInactivityTimer(pseudo);
 
 		player.isAlive = false;
 		player.hasClearedWave = true; // Mark as done (disconnected)
@@ -200,6 +224,9 @@ export class GameInstance {
 		this.state.status = 'completed';
 		this.state.completedAt = Date.now();
 
+		// Clear all inactivity timers
+		this.clearAllInactivityTimers();
+
 		const anyWon = Array.from(this.state.players.values()).some((p) => p.isAlive);
 
 		const playerStats = Array.from(this.state.players.values()).map((p) => ({
@@ -218,6 +245,11 @@ export class GameInstance {
 		this.broadcastToAll(gameEndedEvent);
 
 		logger.info(`Game ${this.gameId} ended. Victory: ${anyWon}`);
+
+		// Notify GameManager that game has ended
+		if (this.onGameEnd) {
+			this.onGameEnd(!anyWon); // true if all players dead
+		}
 	}
 
 	/**
@@ -259,5 +291,105 @@ export class GameInstance {
 	 */
 	getPlayerCount(): number {
 		return this.connections.size;
+	}
+
+	/**
+	 * Set callback for when game ends
+	 */
+	setOnGameEnd(callback: (allPlayersDead: boolean) => void) {
+		this.onGameEnd = callback;
+	}
+
+	/**
+	 * Get player connections
+	 */
+	getConnections(): PlayerConnection[] {
+		return Array.from(this.connections.values());
+	}
+
+	/**
+	 * Start inactivity timers for all alive players
+	 */
+	private startInactivityTimers() {
+		// Clear any existing timers first
+		this.clearAllInactivityTimers();
+
+		for (const [pseudo, player] of this.state.players.entries()) {
+			if (player.isAlive && !player.hasClearedWave) {
+				this.startInactivityTimer(pseudo);
+			}
+		}
+	}
+
+	/**
+	 * Start inactivity timer for a specific player
+	 */
+	private startInactivityTimer(pseudo: string) {
+		const timer = setTimeout(() => {
+			this.handlePlayerInactivity(pseudo);
+		}, this.INACTIVITY_TIMEOUT);
+
+		this.playerActivityTimers.set(pseudo, timer);
+		logger.debug(`Started inactivity timer for ${pseudo}`);
+	}
+
+	/**
+	 * Reset inactivity timer for a player (they're active)
+	 */
+	private resetInactivityTimer(pseudo: string) {
+		this.clearInactivityTimer(pseudo);
+
+		const player = this.state.players.get(pseudo);
+		if (player && player.isAlive && !player.hasClearedWave) {
+			this.startInactivityTimer(pseudo);
+		}
+	}
+
+	/**
+	 * Clear inactivity timer for a specific player
+	 */
+	private clearInactivityTimer(pseudo: string) {
+		const timer = this.playerActivityTimers.get(pseudo);
+		if (timer) {
+			clearTimeout(timer);
+			this.playerActivityTimers.delete(pseudo);
+			logger.debug(`Cleared inactivity timer for ${pseudo}`);
+		}
+	}
+
+	/**
+	 * Clear all inactivity timers
+	 */
+	private clearAllInactivityTimers() {
+		for (const timer of this.playerActivityTimers.values()) {
+			clearTimeout(timer);
+		}
+		this.playerActivityTimers.clear();
+	}
+
+	/**
+	 * Handle player inactivity (no events for INACTIVITY_TIMEOUT)
+	 */
+	private handlePlayerInactivity(pseudo: string) {
+		const player = this.state.players.get(pseudo);
+		if (!player || !player.isAlive || player.hasClearedWave) {
+			// Player already dead or cleared wave, ignore
+			return;
+		}
+
+		logger.warn(
+			`Game ${this.gameId}: ${pseudo} inactive for ${this.INACTIVITY_TIMEOUT / 1000}s, marking as dead`
+		);
+
+		// Mark player as dead due to inactivity
+		player.isAlive = false;
+		player.hasClearedWave = true;
+		player.lives = 0;
+
+		// Clear the timer
+		this.clearInactivityTimer(pseudo);
+
+		// Check if wave is now complete
+		this.checkWaveCompletion();
 	}
 }

@@ -136,12 +136,15 @@ export function createMultiplayerGameState() {
 	 * Handle game ended
 	 */
 	function handleGameEnded(event: Extract<ServerEvent, { type: 'game-ended' }>) {
-		multiplayerStatus = 'ended';
-
 		if (event.victory) {
-			gameState.setGameState('won');
+			// Someone won - show victory/game over screen
+			multiplayerStatus = 'ended';
+			gameState.setGameState(event.playerStats.find((p) => p.pseudo === pseudo)?.survived ? 'won' : 'gameOver');
 		} else {
-			gameState.setGameState('gameOver');
+			// All players died - return to lobby/waiting for restart
+			multiplayerStatus = 'lobby';
+			gameState.setGameState('menu');
+			console.log('All players died - waiting for game restart...');
 		}
 
 		console.log('Game ended!', { victory: event.victory, stats: event.playerStats });
