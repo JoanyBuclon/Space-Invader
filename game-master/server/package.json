@@ -1,0 +1,39 @@
+{
+	"name": "space-invader-server",
+	"version": "1.0.0",
+	"description": "Multiplayer Space Invader game server with gRPC",
+	"type": "module",
+	"main": "dist/server.js",
+	"scripts": {
+		"dev": "tsx watch src/server.ts",
+		"build": "tsc",
+		"start": "node dist/server.js",
+		"proto:generate": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./src/generated --grpc_out=grpc_js:./src/generated --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ./proto proto/*.proto && grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./src/generated -I ./proto proto/*.proto",
+		"lint": "eslint . --ext .ts",
+		"format": "prettier --write \"src/**/*.ts\""
+	},
+	"keywords": [
+		"grpc",
+		"multiplayer",
+		"game",
+		"space-invader"
+	],
+	"author": "Sfeir Bordeaux",
+	"license": "MIT",
+	"dependencies": {
+		"@grpc/grpc-js": "^1.12.4",
+		"@grpc/proto-loader": "^0.7.13",
+		"@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
+		"ws": "^8.18.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.5",
+		"@types/ws": "^8.5.13",
+		"@typescript-eslint/eslint-plugin": "^8.19.1",
+		"@typescript-eslint/parser": "^8.19.1",
+		"eslint": "^9.18.0",
+		"prettier": "^3.4.2",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.2"
+	}
+}

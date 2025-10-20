@@ -4,7 +4,8 @@
       "Bash(pnpm run lint)",
       "Bash(pnpm run format:*)",
       "Bash(pnpm dev)",
-      "Bash(pnpm run check:*)"
+      "Bash(pnpm run check:*)",
+      "Bash(dir /b \"H:\\Web\\Space-Invader\\game-master\")"
     ],
     "deny": [],
     "ask": []

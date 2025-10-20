@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package spaceinvader;
+
+// Main game service with bidirectional streaming
+service GameService {
+  // Bidirectional streaming for real-time game events
+  rpc PlayGame(stream ClientEvent) returns (stream ServerEvent);
+
+  // Dashboard monitoring
+  rpc MonitorGames(DashboardRequest) returns (stream DashboardUpdate);
+}
+
+// Client to Server Events
+message ClientEvent {
+  oneof event {
+    PlayerJoinedEvent player_joined = 1;
+    PlayerDisconnectedEvent player_disconnected = 2;
+    PlayerTouchedEvent player_touched = 3;
+    WaveClearedEvent wave_cleared = 4;
+    EnemyKilledEvent enemy_killed = 5;
+    PlayerKilledEvent player_killed = 6;
+  }
+}
+
+message PlayerJoinedEvent {
+  string pseudo = 1;
+}
+
+message PlayerDisconnectedEvent {
+  string pseudo = 1;
+}
+
+message PlayerTouchedEvent {
+  string pseudo = 1;
+}
+
+message WaveClearedEvent {
+  string pseudo = 1;
+}
+
+message EnemyKilledEvent {
+  string pseudo = 1;
+}
+
+message PlayerKilledEvent {
+  string pseudo = 1;
+}
+
+// Server to Client Events
+message ServerEvent {
+  oneof event {
+    GameStartedEvent game_started = 1;
+    WaveStartedEvent wave_started = 2;
+    GameEndedEvent game_ended = 3;
+    LobbyUpdateEvent lobby_update = 4;
+    ErrorEvent error = 5;
+  }
+}
+
+message GameStartedEvent {
+  int32 number_of_waves = 1;
+  int32 life_points = 2;
+  repeated string players = 3; // List of all players in the game
+}
+
+message WaveStartedEvent {
+  int32 wave_number = 1;
+  int32 number_of_enemies = 2;
+  int32 number_of_lines = 3;
+  int32 enemy_life = 4;
+}
+
+message GameEndedEvent {
+  bool victory = 1; // true if at least one player won
+  repeated PlayerStats player_stats = 2;
+}
+
+message LobbyUpdateEvent {
+  repeated string waiting_players = 1;
+  int32 required_players = 2;
+  int32 current_players = 3;
+}
+
+message ErrorEvent {
+  string message = 1;
+  string code = 2;
+}
+
+// Dashboard monitoring
+message DashboardRequest {
+  // Empty for now, could add filters in the future
+}
+
+message DashboardUpdate {
+  repeated GameInfo active_games = 1;
+  ServerStats stats = 2;
+}
+
+message GameInfo {
+  string game_id = 1;
+  repeated PlayerInfo players = 2;
+  int32 current_wave = 3;
+  int32 total_waves = 4;
+  string status = 5; // "waiting", "active", "completed"
+  int64 started_at = 6; // Unix timestamp
+}
+
+message PlayerInfo {
+  string pseudo = 1;
+  int32 lives = 2;
+  int32 kills = 3;
+  bool is_alive = 4;
+  bool has_cleared_wave = 5;
+}
+
+message PlayerStats {
+  string pseudo = 1;
+  int32 total_kills = 2;
+  int32 waves_cleared = 3;
+  bool survived = 4;
+}
+
+message ServerStats {
+  int32 total_games = 1;
+  int32 active_games = 2;
+  int32 total_players = 3;
+  int64 uptime = 4; // seconds
+}

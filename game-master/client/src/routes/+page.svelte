@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createGameState } from '$lib/game/gameState.svelte';
+	import { createMultiplayerGameState } from '$lib/game/multiplayerState.svelte';
 	import GameCanvas from '$lib/components/GameCanvas.svelte';
 	import GameUI from '$lib/components/GameUI.svelte';
 	import GameScreens from '$lib/components/GameScreens.svelte';
+	import LobbyScreen from '$lib/components/LobbyScreen.svelte';
 
-	const gameState = createGameState();
+	const gameState = createMultiplayerGameState();
 
 	onMount(() => {
 		// Keyboard event handlers
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (gameState.gameState !== 'playing') return;
+			if (gameState.multiplayerStatus !== 'playing') return;
 
 			switch (e.key) {
 				case 'ArrowLeft':
@@ -56,6 +57,7 @@
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
 			window.removeEventListener('keyup', handleKeyUp);
+			gameState.disconnect(); // Disconnect on unmount
 		};
 	});
 </script>
@@ -73,12 +75,17 @@
 		<GameCanvas {gameState} />
 
 		<!-- UI Overlays -->
-		{#if gameState.gameState === 'playing'}
+		{#if gameState.multiplayerStatus === 'playing'}
 			<GameUI {gameState} />
 		{/if}
 
-		<!-- Screens (Menu, Victory, Game Over) -->
-		<GameScreens {gameState} />
+		<!-- Multiplayer Screens (Lobby, Waiting) -->
+		<LobbyScreen {gameState} />
+
+		<!-- Game Screens (Victory, Game Over) -->
+		{#if gameState.multiplayerStatus === 'ended'}
+			<GameScreens {gameState} />
+		{/if}
 	</div>
 </div>
 

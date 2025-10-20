@@ -4,13 +4,14 @@ Ce dossier contient le client du jeu Space Invader pour l'Étape 2 de l'atelier 
 
 ## Contenu
 
-Ce client implémente le mode multijoueur synchronisé via gRPC :
+Ce client implémente le mode multijoueur synchronisé via WebSocket :
 
-- **Connexion au serveur** : le joueur entre un pseudonyme pour s'identifier
+- **Lobby system** : les joueurs entrent un pseudonyme et attendent dans un lobby
 - **Synchronisation** : le serveur gère les parties et envoie les paramètres de chaque vague
-- **Communication gRPC** : échange bidirectionnel d'événements entre client et serveur
+- **Communication WebSocket** : échange bidirectionnel d'événements entre client et serveur
 - **Gameplay partagé** : tous les joueurs affrontent les mêmes vagues simultanément
 - **Progression collective** : la vague suivante démarre quand tous les joueurs l'ont vaincue ou sont morts
+- **Configuration dynamique** : le nombre d'ennemis, lignes et HP sont définis par le serveur
 
 ### Événements envoyés au serveur
 
@@ -41,10 +42,28 @@ pnpm install
 # ou npm install, yarn
 ```
 
+## Configuration
+
+Créer un fichier `.env` (optionnel) :
+
+```bash
+# WebSocket Server URL
+PUBLIC_WS_SERVER_URL=ws://localhost:3001/game
+```
+
+Par défaut, le client se connecte à `ws://localhost:3001/game`.
+
 ## Développement
 
-Démarrer le serveur de développement :
+**Important** : Le serveur doit être lancé avant le client!
 
+1. Dans un terminal, lancer le serveur :
+```sh
+cd ../server
+pnpm dev
+```
+
+2. Dans un autre terminal, lancer le client :
 ```sh
 pnpm dev
 

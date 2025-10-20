@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { GameStateManager } from '$lib/game/gameState.svelte';
+	import type { MultiplayerGameState } from '$lib/game/multiplayerState.svelte';
 	import {
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT,
@@ -34,7 +34,7 @@
 	} from '$lib/game/particles';
 
 	interface Props {
-		gameState: GameStateManager;
+		gameState: MultiplayerGameState;
 	}
 
 	let { gameState }: Props = $props();
@@ -68,7 +68,7 @@
 	}
 
 	function update() {
-		if (gameState.gameState !== 'playing') return;
+		if (gameState.multiplayerStatus !== 'playing') return;
 
 		frameCount++;
 
@@ -132,6 +132,9 @@
 				gameState.loseLife();
 				gameState.removeEnemy(enemy.id);
 
+				// Notify server of player touched
+				gameState.notifyPlayerTouched();
+
 				// Create explosion
 				const particles = createExplosion(
 					enemy.x + enemy.width / 2,
@@ -164,6 +167,9 @@
 						gameState.removeEnemy(enemy.id);
 						gameState.addScore(100);
 						gameState.triggerShake();
+
+						// Notify server of enemy kill
+						gameState.notifyEnemyKilled();
 
 						// Create explosion
 						const particles = createExplosion(
@@ -203,14 +209,14 @@
 	}
 
 	function checkGameConditions() {
-		// Check win
-		if (gameState.enemies.length === 0) {
-			gameState.setGameState('won');
+		// Check win (wave cleared)
+		if (gameState.enemies.length === 0 && gameState.multiplayerStatus === 'playing') {
+			gameState.notifyWaveCleared();
 		}
 
-		// Check lose
-		if (gameState.player.lives <= 0) {
-			gameState.setGameState('gameOver');
+		// Check lose (player killed)
+		if (gameState.player.lives <= 0 && gameState.multiplayerStatus === 'playing') {
+			gameState.notifyPlayerKilled();
 		}
 	}
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//h/Web/Space-Invader/game-master/client/**)",
+      "Read(//h/Web/Space-Invader/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
